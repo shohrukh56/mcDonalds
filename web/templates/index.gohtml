@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{{.Title}}</title>
+</head>
+<body >
+<style>
+    body {background-image: url("https://www.freepngimg.com/thumb/sandwich/70548-king-hamburger-food-mcdonald's-cheeseburger-fast-burger.png");
+        height: 100%;
+        color: gray;
+        background-size: cover;}
+</style>
+<h1>{{.Title}}</h1>
+<form action="/burgers/save" method="POST" >
+    <input type="hidden" name="action" value="save" >
+    <input type="text" name="name" placeholder="Название бургера">
+    <input type="number" name="price" placeholder="Цена">
+    <button>Сохранить</button>
+</form>
+<ul style="color: black">
+    {{range $index, $val := .Burgers}}
+        <li>
+            {{$val.Name}} {{$val.Price}}
+            <form action="/burgers/remove" method="POST">
+                <input type="hidden" name="action" value="remove">
+                <input type="hidden" name="id" value="{{$val.Id}}">
+                <button>Удалить</button>
+            </form>
+        </li>
+    {{end}}
+</ul>
+</body>
+</html>
