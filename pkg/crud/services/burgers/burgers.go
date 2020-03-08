@@ -25,6 +25,12 @@ func (service *BurgersSvc) BurgersList() (list []models.Burger, err error) {
 		return nil, errors.NewApiError("can't execute pool: ", err)
 	}
 	defer conn.Release()
+	_, err = conn.Exec(context.Background(), createDB)
+	if err != nil {
+		if err != nil {
+			return nil, errors.NewApiError("can't query: execute pool", err)
+		}
+	}
 	rows, err := conn.Query(context.Background(), getFalseBurgers)
 	if err != nil {
 		return nil, errors.NewApiError("can't query: execute pool", err)
