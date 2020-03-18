@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"crud/cmd/crud/app"
-	"crud/pkg/crud/services/burgers"
 	"flag"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/shohrukh56/mcDonalds/cmd/crud/app"
+	"github.com/shohrukh56/mcDonalds/pkg/crud/services/burgers"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -18,44 +19,35 @@ var (
 	dsn  = flag.String("dsn", "postgres://user:pass@localhost:5432/app", "Postgres DSN")
 )
 
-const envHost = "HOST"
-const envPort = "PORT"
-const envDSN = "DATABASE_URL"
-
-func fromFLagOrEnv(flag *string, envName string) (server string, ok bool) {
-	if *flag != "" {
-		return *flag, true
-	}
-	return os.LookupEnv(envName)
-}
-
 func main() {
 	flag.Parse()
-	hostf, ok := fromFLagOrEnv(host, envHost)
-	if !ok {
-		hostf = *host
+	portEnv, ok := os.LookupEnv("PORT")
+	if ok {
+		log.Print()
+		*port = portEnv
 	}
-	portf, ok := fromFLagOrEnv(port, envPort)
-	if !ok {
-		portf = *port
+	dsnEnv, ok := os.LookupEnv("DATABASE_URL")
+	if ok {
+		*dsn = dsnEnv
 	}
-	dsnf, ok := fromFLagOrEnv(dsn, envDSN)
-	if !ok {
-		dsnf = *dsn
-	}
-
-	addr := net.JoinHostPort(hostf, portf)
-	start(addr, dsnf)
+	log.Print(*dsn)
+	addr := net.JoinHostPort(*host, *port)
+	start(addr, *dsn)
 }
 
 func start(addr string, dsn string) {
 	router := app.NewExactMux()
-	// Context: <-
 	pool, err := pgxpool.Connect(context.Background(), dsn)
 	if err != nil {
 		panic(err)
 	}
+
 	burgersSvc := burgers.NewBurgersSvc(pool)
+	err = burgersSvc.InitDB()
+	if err != nil {
+		panic(err)
+	}
+
 	server := app.NewServer(
 		router,
 		pool,
@@ -67,4 +59,3 @@ func start(addr string, dsn string) {
 
 	panic(http.ListenAndServe(addr, server))
 }
-

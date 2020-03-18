@@ -2,38 +2,45 @@ package burgers
 
 import (
 	"context"
-	"crud/pkg/crud/errors"
-	"crud/pkg/crud/models"
+	"errors"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/shohrukh56/mcDonalds/pkg/crud/models"
 )
 
 type BurgersSvc struct {
-	pool *pgxpool.Pool
+	pool *pgxpool.Pool // dependency
 }
 
 func NewBurgersSvc(pool *pgxpool.Pool) *BurgersSvc {
 	if pool == nil {
-		panic(errors.New("pool can't be nil")) // <- be accurate
+		panic(errors.New("pool can't be nil"))
 	}
 	return &BurgersSvc{pool: pool}
+}
+
+func (service *BurgersSvc) InitDB() error {
+	conn, err := service.pool.Acquire(context.Background())
+	if err != nil {
+		return NewDbError(err)
+	}
+	_, err = conn.Query(context.Background(), burgersDDL)
+	if err != nil {
+		return NewQueryError(burgersDDL, err)
+	}
+	return nil
 }
 
 func (service *BurgersSvc) BurgersList() (list []models.Burger, err error) {
 	list = make([]models.Burger, 0) // TODO: for REST API
 	conn, err := service.pool.Acquire(context.Background())
 	if err != nil {
-		return nil, errors.NewApiError("can't execute pool: ", err)
+		return nil, NewDbError(err) // TODO: wrap to specific error
 	}
 	defer conn.Release()
-	_, err = conn.Exec(context.Background(), createDB)
+
+	rows, err := conn.Query(context.Background(), getIdNamePriceSQL)
 	if err != nil {
-		if err != nil {
-			return nil, errors.NewApiError("can't query: execute pool", err)
-		}
-	}
-	rows, err := conn.Query(context.Background(), getFalseBurgers)
-	if err != nil {
-		return nil, errors.NewApiError("can't query: execute pool", err)
+		return nil, NewQueryError(getIdNamePriceSQL, err) // TODO: wrap to specific error
 	}
 	defer rows.Close()
 
@@ -41,13 +48,13 @@ func (service *BurgersSvc) BurgersList() (list []models.Burger, err error) {
 		item := models.Burger{}
 		err := rows.Scan(&item.Id, &item.Name, &item.Price)
 		if err != nil {
-			return nil, errors.NewApiError("can't scan row: ", err)
+			return nil, NewDbError(err) // TODO: wrap to specific error
 		}
 		list = append(list, item)
 	}
 	err = rows.Err()
 	if err != nil {
-		return nil, err
+		return nil, NewDbError(err)
 	}
 
 	return list, nil
@@ -56,25 +63,31 @@ func (service *BurgersSvc) BurgersList() (list []models.Burger, err error) {
 func (service *BurgersSvc) Save(model models.Burger) (err error) {
 	conn, err := service.pool.Acquire(context.Background())
 	if err != nil {
-		return errors.NewApiError("can't execute pool: ", err)
+		return NewDbError(err) // TODO: wrap to specific error
 	}
 	defer conn.Release()
-	_, err = conn.Exec(context.Background(), saveInBurgers, model.Name, model.Price)
+
+
+	_, err = conn.Exec(context.Background(), insertNamePriceSQL, model.Name, model.Price)
 	if err != nil {
-		return errors.NewApiError("can't save burger: ", err)
+		return NewQueryError(insertNamePriceSQL, err)
 	}
+
 	return nil
 }
 
-func (service *BurgersSvc) RemoveById(id int) (err error) {
+func (service *BurgersSvc) RemoveById(id int64) (err error) {
 	conn, err := service.pool.Acquire(context.Background())
 	if err != nil {
-		return errors.NewApiError("can't execute pool: ", err)
+		return NewDbError(err) // TODO: wrap to specific error
 	}
 	defer conn.Release()
-	_, err = conn.Exec(context.Background(), removeBurger, id)
+
+
+	_, err = conn.Exec(context.Background(), setRemovedTrueByIdSQL, id)
 	if err != nil {
-		return errors.NewApiError("can't remove burger: ", err)
+		return NewQueryError(setRemovedTrueByIdSQL, err)
 	}
+
 	return nil
 }

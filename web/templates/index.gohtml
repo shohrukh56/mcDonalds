@@ -1,3 +1,4 @@
+{{/* ! + TAB - базовая структура HTML */}}
 <!doctype html>
 <html lang="en">
 <head>
@@ -5,32 +6,44 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    {{/* .Title - вывод данных */}}
     <title>{{.Title}}</title>
 </head>
-<body >
+<body>
 <style>
-    body {background-image: url("https://www.freepngimg.com/thumb/sandwich/70548-king-hamburger-food-mcdonald's-cheeseburger-fast-burger.png");
+    body {
+        background-image: url("https://cdn.livekindly.co/wp-content/uploads/2019/09/vegan-plant-based-news-vegan-mcdonalds-livekindly.jpg");
         height: 100%;
-        color: gray;
-        background-size: cover;}
+        color: black;
+        background-size: cover;
+    }
 </style>
+{{/* emmet */}}
+{{/* ! + Tab - структура */}}
+{{/* tag + Tab - разворачивает tag */}}
+{{/* tag{} + Tab - разворачивает tag + внутрь подставляет контент */}}
 <h1>{{.Title}}</h1>
-<form action="/burgers/save" method="POST" >
-    <input type="hidden" name="action" value="save" >
-    <input type="text" name="name" placeholder="Название бургера">
-    <input type="number" name="price" placeholder="Цена">
-    <button>Сохранить</button>
+{{/* CREATE, READ, UPDATE, DELETE */}}
+
+{{/* form>input+button */}}
+<form action="/burgers/save" method="POST">
+    <input type="hidden" name="action" value="save">
+    <input type="text" name="name" required>
+    <input type="text" name="price" required>
+    <button>Ok</button>
 </form>
-<ul style="color: black">
+
+<ul>
+    {{/* for index, val := range data.Burgers { }*/}}
     {{range $index, $val := .Burgers}}
-        <li>
-            {{$val.Name}} {{$val.Price}}
-            <form action="/burgers/remove" method="POST">
-                <input type="hidden" name="action" value="remove">
-                <input type="hidden" name="id" value="{{$val.Id}}">
-                <button>Удалить</button>
-            </form>
-        </li>
+    <li>
+        {{$val.Name}} {{$val.BeforeDot}}.{{$val.AfterDot}}
+        <form action="/burgers/remove" method="POST">
+            <input type="hidden" name="action" value="remove">
+            <input type="hidden" name="id" value="{{$val.Id}}">
+            <button>Remove</button>
+        </form>
+    </li>
     {{end}}
 </ul>
 </body>

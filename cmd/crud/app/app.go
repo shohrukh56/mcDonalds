@@ -1,9 +1,9 @@
 package app
 
 import (
-	"crud/pkg/crud/services/burgers"
 	"errors"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/shohrukh56/mcDonalds/pkg/crud/services/burgers"
 	"net/http"
 )
 
@@ -15,7 +15,9 @@ type server struct {
 	assetsPath    string
 }
 
-func NewServer(router http.Handler, pool *pgxpool.Pool, burgersSvc *burgers.BurgersSvc, templatesPath string, assetsPath string) *server {
+func NewServer(router http.Handler, pool *pgxpool.Pool, burgersSvc *burgers.BurgersSvc,
+	templatesPath string, assetsPath string) *server {
+
 	if router == nil {
 		panic(errors.New("router can't be nil"))
 	}
@@ -44,4 +46,3 @@ func NewServer(router http.Handler, pool *pgxpool.Pool, burgersSvc *burgers.Burg
 func (receiver *server) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	receiver.router.ServeHTTP(writer, request)
 }
-
